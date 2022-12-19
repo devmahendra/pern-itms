@@ -1,0 +1,74 @@
+-- Table: public.project
+
+-- DROP TABLE IF EXISTS public.project;
+
+CREATE TABLE IF NOT EXISTS public.project
+(
+    project_id integer NOT NULL DEFAULT nextval('project_project_id_seq'::regclass),
+    project_no character varying(13) COLLATE pg_catalog."default" NOT NULL,
+    project_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    project_description text COLLATE pg_catalog."default",
+    project_owner character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    project_priority character(15) COLLATE pg_catalog."default" NOT NULL,
+    project_status character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    project_start date NOT NULL,
+    project_end date NOT NULL,
+    CONSTRAINT project_pkey PRIMARY KEY (project_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.project
+    OWNER to postgres;
+
+
+
+-- Table: public.resource
+
+-- DROP TABLE IF EXISTS public.resource;
+
+CREATE TABLE IF NOT EXISTS public.resource
+(
+    resource_id integer NOT NULL DEFAULT nextval('resources_resource_id_seq'::regclass),
+    project_id integer NOT NULL DEFAULT nextval('resources_project_id_seq'::regclass),
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    "position" character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT resources_pkey PRIMARY KEY (resource_id),
+    CONSTRAINT project_fk FOREIGN KEY (project_id)
+        REFERENCES public.project (project_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.resource
+    OWNER to postgres;
+
+
+
+-- Table: public.task
+
+-- DROP TABLE IF EXISTS public.task;
+
+CREATE TABLE IF NOT EXISTS public.task
+(
+    task_id integer NOT NULL DEFAULT nextval('task_task_id_seq'::regclass),
+    project_id integer NOT NULL DEFAULT nextval('task_project_id_seq'::regclass),
+    task_name character varying(255) COLLATE pg_catalog."default",
+    task_status character varying(100) COLLATE pg_catalog."default",
+    task_start date,
+    task_end date,
+    CONSTRAINT task_pkey PRIMARY KEY (task_id),
+    CONSTRAINT project_fk FOREIGN KEY (project_id)
+        REFERENCES public.project (project_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.task
+    OWNER to postgres;
