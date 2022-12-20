@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Table, Input, Pagination, Select, Button } from "components/ui";
+import { Table, Input, Pagination, Select, Button, Tooltip } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
 import { matchSorter } from "match-sorter";
-import { HiOutlineSearch, HiDownload, HiPlusCircle } from "react-icons/hi";
+import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
 import { Link, useParams } from "react-router-dom";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
@@ -91,11 +91,8 @@ const ResourceProject = () => {
   );
 
   const {
-    // getTableProps,
-    // getTableBodyProps,
     headerGroups,
-    // page,
-    // prepareRow,
+
     state,
     preGlobalFilteredRows,
     setGlobalFilter,
@@ -116,7 +113,6 @@ const ResourceProject = () => {
     useSortBy,
     usePagination
   );
-  //const firstPageRows = rows.slice(0, 10);
 
   const onPaginationChange = (page) => {
     console.log("page", page);
@@ -153,15 +149,8 @@ const ResourceProject = () => {
         <span className="mx-2"> / </span>
         <span>Resource</span>
       </div>
-      {/* <Table {...getTableProps()}> */}
+
       <Table>
-        {/* <THead>
-          <Tr>
-            {columns.map((column) => (
-              <Th key={column.accessor}>{column.Header}</Th>
-            ))}
-          </Tr>
-        </THead> */}
         <THead>
           {headerGroups.map((headerGroup) => (
             <Tr {...headerGroup.getHeaderGroupProps()}>
@@ -173,35 +162,31 @@ const ResourceProject = () => {
                   </span>
                 </Th>
               ))}
+              <Th></Th>
             </Tr>
           ))}
         </THead>
-        {/* <TBody {...getTableBodyProps()}> */}
+
         <TBody>
           {data?.map((row, i) => {
-            // prepareRow(row);
             return (
-              //   <Tr {...row.getRowProps()}>
               <Tr key={i}>
                 <Td>{row?.name}</Td>
                 <Td>{row?.position}</Td>
-                {/* <Td>
-                  <div className="flex-wrap inline-flex items-center gap-2">
-                    <Tooltip title="Detail">
-                      <Button icon={<HiMenu />} />
-                      <p>{row.getRowProps(row.project_id)}</p>
-                    </Tooltip>
+                <Td>
+                  <div className="flex justify-end text-lg">
                     <Tooltip title="Edit">
-                      <Button icon={<HiPencil />} />
+                      <span className="cursor-pointer p-2 hover:text-red-500">
+                        <HiOutlinePencil />
+                      </span>
                     </Tooltip>
                     <Tooltip title="Delete">
-                      <Button icon={<HiTrash />} />
+                      <span className="cursor-pointer p-2 hover:text-red-500">
+                        <HiOutlineTrash />
+                      </span>
                     </Tooltip>
                   </div>
                 </Td>
-                {row.cells.map((cell) => {
-                  return <Td {...cell.getCellProps()}>{cell.render("Cell")}</Td>;
-                })} */}
               </Tr>
             );
           })}
