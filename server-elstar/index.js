@@ -18,10 +18,10 @@ app.get("/projects", async (req, res) => {
 });
 
 //get all resources
-app.get("/resources", async (req, res) => {
+app.get("/projects/tasks", async (req, res) => {
   try {
-    const allResources = await pool.query("COUNT(SELECT * FROM resource LEFT JOIN project where project.project_status = $1)", [id]);
-    res.json(allResources.rows);
+    const allTasks = await pool.query("SELECT a.task_id, b.project_no, b.project_name, a.task_name, a.task_status, a.task_start, a.task_end FROM task a JOIN project b ON a.project_id = b.project_id");
+    res.json(allTasks.rows);
   } catch (err) {
     console.error(err.message);
   }

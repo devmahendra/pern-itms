@@ -1,9 +1,11 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Table, Input, Pagination, Select, Button, Tooltip, Card } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
+import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
 import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlineCalendar, HiOutlineTrash, HiOutlinePencil, HiOutlineUserGroup } from "react-icons/hi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
@@ -48,6 +50,50 @@ const pageSizeOption = [
   { value: 50, label: "50 / page" },
 ];
 
+const ActionColumn = ({ row }) => {
+  const dispatch = useDispatch();
+  const { textTheme } = useThemeClass();
+  const navigate = useNavigate();
+
+  const onDelete = () => {
+    dispatch("/");
+    dispatch("/");
+  };
+
+  const onResources = useCallback(() => {
+    navigate(`/project/resource-project/${row?.project_id}`);
+  }, [navigate, row]);
+
+  const onTasks = useCallback(() => {
+    navigate(`/project/task-project/${row?.project_id}`);
+  }, [navigate, row]);
+
+  return (
+    <div className="flex justify-end text-lg">
+      <Tooltip title="Resources">
+        <span className={`cursor-pointer p-2 hover:${textTheme}`} onClick={onResources}>
+          <HiOutlineUserGroup />
+        </span>
+      </Tooltip>
+      <Tooltip title="Tasks">
+        <span className={`cursor-pointer p-2 hover:${textTheme}`} onClick={onTasks}>
+          <HiOutlineCalendar />
+        </span>
+      </Tooltip>
+      <Tooltip title="Edit">
+        <span className={`cursor-pointer p-2 hover:${textTheme}`}>
+          <HiOutlinePencil />
+        </span>
+      </Tooltip>
+      <Tooltip title="Delete">
+        <span className="cursor-pointer p-2 hover:text-red-500">
+          <HiOutlineTrash />
+        </span>
+      </Tooltip>
+    </div>
+  );
+};
+
 const ReactTable = ({ columns }) => {
   const [data, setData] = useState([]);
   const getData = async () => {
@@ -80,7 +126,11 @@ const ReactTable = ({ columns }) => {
 
   const {
     headerGroups,
+    getTableProps,
+    getTableBodyProps,
     state,
+    prepareRow,
+    page,
     preGlobalFilteredRows,
     setGlobalFilter,
     allColumns,
@@ -110,14 +160,6 @@ const ReactTable = ({ columns }) => {
     setPageSize(Number(value));
   };
 
-  const truncateString = (str, num) => {
-    if (str?.length > num) {
-      return str.slice(0, num) + " ... ";
-    } else {
-      return str;
-    }
-  };
-
   return (
     <>
       <Card className="mb-4">
@@ -137,69 +179,33 @@ const ReactTable = ({ columns }) => {
             </Link>
           </div>
         </div>
-        <Table>
+        <Table {...getTableProps()}>
           <THead>
             {headerGroups.map((headerGroup) => (
               <Tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map((column) => (
                   <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render("Header")}
-                    <span>
-                      <Sorter sort={column.isSortedDesc} />
-                    </span>
+                    {column.sortable ? <Sorter sort={column.isSortedDesc} /> : null}
                   </Th>
                 ))}
-                <Th></Th>
               </Tr>
             ))}
           </THead>
-
-          <TBody>
-            {data?.map((row, i) => {
+          <TBody {...getTableBodyProps()}>
+            {page?.map((row, i) => {
+              prepareRow(row);
               return (
-                <Tr key={i}>
-                  <Td>{row?.project_no}</Td>
-                  <Td>{row?.project_name}</Td>
-                  <Td>{truncateString(row?.project_description, 100)}</Td>
-                  <Td>{row?.project_owner}</Td>
-                  <Td>{row?.project_priority}</Td>
-                  <Td>{row?.project_status}</Td>
-                  <Td>{dayjs(row?.project_start).format("DD/MM/YYYY")}</Td>
-                  <Td>{dayjs(row?.project_end).format("DD/MM/YYYY")}</Td>
-                  <Td>
-                    <div className="flex justify-end text-lg">
-                      <Tooltip title="Resource">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <Link to={`/project/resource-project/${row.project_id}`}>
-                            <HiOutlineUserGroup />
-                          </Link>
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Tasks">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <Link to={`/project/task-project/${row.project_id}`}>
-                            <HiOutlineCalendar />
-                          </Link>
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <HiOutlinePencil />
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <HiOutlineTrash />
-                        </span>
-                      </Tooltip>
-                    </div>
-                  </Td>
+                <Tr {...row.getRowProps()}>
+                  {row.cells.map((cell) => {
+                    return <Td {...cell.getCellProps()}>{cell.render("Cell")}</Td>;
+                  })}
                 </Tr>
               );
             })}
-            {data.length === 0 && (
+            {page?.length === 0 && (
               <Tr>
-                <Td className="text-center" colSpan={allColumns.length}>
+                <Td className="text-center" colspan={allColumns.length}>
                   No data found!
                 </Td>
               </Tr>
@@ -218,39 +224,73 @@ const ReactTable = ({ columns }) => {
 };
 
 function TableProject() {
+  const truncateString = (str, num) => {
+    if (str?.length > num) {
+      return str.slice(0, num) + " ... ";
+    } else {
+      return str;
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
         Header: "No Change Request",
         accessor: "project_no",
+        sortable: true,
       },
       {
         Header: "Project Name",
         accessor: "project_name",
+        sortable: true,
       },
       {
         Header: "Project Description",
         accessor: "project_description",
+        sortable: true,
+        Cell: (props) => {
+          const { project_description } = props.row.original;
+          return <span>{truncateString(project_description, 100)}</span>;
+        },
       },
       {
         Header: "Project Owner",
         accessor: "project_owner",
+        sortable: true,
       },
       {
         Header: "Project Priority",
         accessor: "project_priority",
+        sortable: true,
       },
       {
         Header: "Project Status",
         accessor: "project_status",
+        sortable: true,
       },
       {
         Header: "Project Start",
         accessor: "project_start",
+        sortable: true,
+        Cell: (props) => {
+          const { task_end } = props.row.original;
+          return <span>{dayjs(task_end).format("DD/MM/YYYY")}</span>;
+        },
       },
       {
         Header: "Project End",
         accessor: "project_end",
+        sortable: true,
+        Cell: (props) => {
+          const { task_end } = props.row.original;
+          return <span>{dayjs(task_end).format("DD/MM/YYYY")}</span>;
+        },
+      },
+      {
+        Header: "",
+        id: "action",
+        accessor: (row) => row,
+        Cell: (props) => <ActionColumn row={props.row.original} />,
       },
     ],
     []

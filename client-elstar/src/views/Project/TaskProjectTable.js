@@ -1,9 +1,11 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Table, Input, Pagination, Select, Button, Tooltip, Card } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
+import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
 import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
@@ -49,22 +51,70 @@ const pageSizeOption = [
   { value: 50, label: "50 / page" },
 ];
 
+const ActionColumn = ({ row }) => {
+  const dispatch = useDispatch();
+  const { textTheme } = useThemeClass();
+  const navigate = useNavigate();
+
+  const onDelete = () => {
+    dispatch("/");
+    dispatch("/");
+  };
+
+  const onView = useCallback(() => {
+    navigate(`/project/task/${row?.task_id}`);
+  }, [navigate, row]);
+
+  return (
+    <div className="flex justify-end text-lg">
+      <Tooltip title="Edit">
+        <span className={`cursor-pointer p-2 hover:${textTheme}`} onClick={onView}>
+          <HiOutlinePencil />
+        </span>
+      </Tooltip>
+      <Tooltip title="Delete">
+        <span className="cursor-pointer p-2 hover:text-red-500" onClick={onDelete}>
+          <HiOutlineTrash />
+        </span>
+      </Tooltip>
+    </div>
+  );
+};
+
 const columns = [
   {
     Header: "Task Name",
     accessor: "task_name",
+    sortable: true,
   },
   {
     Header: "Task Status",
     accessor: "task_status",
+    sortable: true,
   },
   {
     Header: "Task Start",
     accessor: "task_start",
+    sortable: true,
+    Cell: (props) => {
+      const { task_start } = props.row.original;
+      return <span>{dayjs(task_start).format("DD/MM/YYYY")}</span>;
+    },
   },
   {
     Header: "Task End",
     accessor: "task_end",
+    sortable: true,
+    Cell: (props) => {
+      const { task_end } = props.row.original;
+      return <span>{dayjs(task_end).format("DD/MM/YYYY")}</span>;
+    },
+  },
+  {
+    Header: "",
+    id: "action",
+    accessor: (row) => row,
+    Cell: (props) => <ActionColumn row={props.row.original} />,
   },
 ];
 
@@ -102,8 +152,11 @@ const TaskProjectTable = () => {
 
   const {
     headerGroups,
-
+    getTableProps,
+    getTableBodyProps,
     state,
+    prepareRow,
+    page,
     preGlobalFilteredRows,
     setGlobalFilter,
     allColumns,
@@ -160,50 +213,33 @@ const TaskProjectTable = () => {
           <span className="mx-2"> / </span>
           <span>Tasks</span>
         </div>
-        <Table>
+        <Table {...getTableProps()}>
           <THead>
             {headerGroups.map((headerGroup) => (
               <Tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map((column) => (
                   <Th {...column.getHeaderProps(column.getSortByToggleProps())}>
                     {column.render("Header")}
-                    <span>
-                      <Sorter sort={column.isSortedDesc} />
-                    </span>
+                    {column.sortable ? <Sorter sort={column.isSortedDesc} /> : null}
                   </Th>
                 ))}
-                <Th></Th>
               </Tr>
             ))}
           </THead>
-          <TBody>
-            {data?.map((row, i) => {
+          <TBody {...getTableBodyProps()}>
+            {page?.map((row, i) => {
+              prepareRow(row);
               return (
-                <Tr key={i}>
-                  <Td>{row?.task_name}</Td>
-                  <Td>{row?.task_status}</Td>
-                  <Td>{dayjs(row?.task_start).format("DD/MM/YYYY")}</Td>
-                  <Td>{dayjs(row?.task_end).format("DD/MM/YYYY")}</Td>
-                  <Td>
-                    <div className="flex justify-end text-lg">
-                      <Tooltip title="Edit">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <HiOutlinePencil />
-                        </span>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <span className="cursor-pointer p-2 hover:text-red-500">
-                          <HiOutlineTrash />
-                        </span>
-                      </Tooltip>
-                    </div>
-                  </Td>
+                <Tr {...row.getRowProps()}>
+                  {row.cells.map((cell) => {
+                    return <Td {...cell.getCellProps()}>{cell.render("Cell")}</Td>;
+                  })}
                 </Tr>
               );
             })}
-            {data.length === 0 && (
+            {page?.length === 0 && (
               <Tr>
-                <Td className="text-center" colSpan={allColumns.length}>
+                <Td className="text-center" colspan={allColumns.length}>
                   No data found!
                 </Td>
               </Tr>
