@@ -1,14 +1,36 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { Table, Input, Pagination, Select, Button, Tooltip, Card } from "components/ui";
+import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
 import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
-import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlineTrash, HiOutlinePencil } from "react-icons/hi";
+import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlineTrash, HiOutlinePencil, HiOutlineCalendar } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
 import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
+
+function getBusinessDatesCount(startDate, endDate) {
+  let count = 0;
+  const curDate = new Date(startDate.getTime());
+  while (curDate <= endDate) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count;
+}
+
+function getDaysLeftCount(currentDate, numOfDates) {
+  let count = 0;
+  const curDate = new Date(currentDate.getTime());
+  while (curDate <= numOfDates) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count;
+}
 
 function FilterInput({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) {
   const count = preGlobalFilteredRows.length;
@@ -184,7 +206,7 @@ const ReactTable = ({ columns }) => {
               return (
                 <Tr {...row.getRowProps()}>
                   {row.cells.map((cell) => {
-                    return <Td {...cell.getCellProps()}>{cell.render("Cell")}</Td>;
+                    return <Td {...cell.getCellProps({ style: { minWidth: cell.column.minWidth, width: cell.column.width } })}>{cell.render("Cell")}</Td>;
                   })}
                 </Tr>
               );
@@ -231,23 +253,64 @@ function TableTask() {
         Header: "Task Status",
         accessor: "task_status",
         sortable: true,
-      },
-      {
-        Header: "Task Start",
-        accessor: "task_start",
-        sortable: true,
         Cell: (props) => {
-          const { task_start } = props.row.original;
-          return <span>{dayjs(task_start).format("DD/MM/YYYY")}</span>;
+          const { task_status } = props.row.original;
+          if (task_status === "Completed") {
+            return <span className="bg-emerald-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+          } else if (task_status === "Expired") {
+            return <span className="bg-rose-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+          } else if (task_status === "Ongoing") {
+            return <span className="bg-amber-600 text-white rounded-full py-1 px-2">{task_status}</span>;
+          } else {
+            return <span className="bg-cyan-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+          }
         },
       },
       {
-        Header: "Task End",
-        accessor: "task_end",
+        Header: "Days Progress",
+        accessor: "days_progress",
         sortable: true,
+        minWidth: 600,
+        width: 600,
         Cell: (props) => {
-          const { task_end } = props.row.original;
-          return <span>{dayjs(task_end).format("DD/MM/YYYY")}</span>;
+          const { task_end, task_start } = props.row.original;
+          const startDate1 = dayjs(task_start).format("MM/DD/YYYY");
+          const endDate1 = dayjs(task_end).format("MM/DD/YYYY");
+          const currentDate1 = dayjs().format("MM/DD/YYYY");
+          var startDate = new Date(startDate1);
+          var endDate = new Date(endDate1);
+          var currentDate = new Date(currentDate1);
+          var numOfDates = getBusinessDatesCount(startDate, endDate);
+          var daysLeft = getDaysLeftCount(currentDate, endDate);
+          var daysOnGoing = numOfDates - daysLeft;
+          const progressDaysInt = Math.ceil((parseInt(daysOnGoing) / parseInt(numOfDates)) * 100);
+          const progressDays = progressDaysInt.toString();
+          return (
+            <div className="my-1 sm:my-0 col-span-12 sm:col-span-2 md:col-span-2 lg:col-span-2 md:flex md:items-center md:justify-end">
+              <Tooltip title="Task Start">
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_start).format("DD/MM/YYYY")}</span>
+              </Tooltip>
+              <span className="ml-1 rtl:mr-1 whitespace-nowrap"> | </span>
+              <Tooltip title="Task End">
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_end).format("DD/MM/YYYY")}</span>
+              </Tooltip>
+              <Progress className="mr-2 ml-2" percent={progressDays} />
+              <div className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-full">
+                <HiOutlineCalendar className="text-base" />
+                <Tooltip title="Days Ongoing">
+                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysOnGoing}</span>
+                </Tooltip>
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+                <Tooltip title="Days Left">
+                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
+                </Tooltip>
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+                <Tooltip title="Total Work Days">
+                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{numOfDates}</span>
+                </Tooltip>
+              </div>
+            </div>
+          );
         },
       },
       {
