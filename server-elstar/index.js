@@ -17,11 +17,23 @@ app.get("/projects", async (req, res) => {
   }
 });
 
-//get all resources
-app.get("/resources", async (req, res) => {
+//get all projects
+app.get("/projectss", async (req, res) => {
   try {
-    const allResources = await pool.query("COUNT(SELECT * FROM resource LEFT JOIN project where project.project_status = $1)", [id]);
-    res.json(allResources.rows);
+    const allProjects = await pool.query(
+      "SELECT a.project_id, a.project_no, a.project_name, a.project_owner, a.project_priority, a.project_status, a.project_start, a.project_end, COUNT(b.task_id) as total_task, SUM(CASE WHEN b.task_status = 'Completed' THEN 1 ELSE 0 END) AS completed_task FROM project a JOIN task b ON a.project_id = b.project_id GROUP BY a.project_id"
+    );
+    res.json(allProjects.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+//get all resources
+app.get("/projects/tasks", async (req, res) => {
+  try {
+    const allTasks = await pool.query("SELECT a.task_id, b.project_no, b.project_name, a.task_name, a.task_status, a.task_start, a.task_end FROM task a JOIN project b ON a.project_id = b.project_id");
+    res.json(allTasks.rows);
   } catch (err) {
     console.error(err.message);
   }
@@ -89,6 +101,20 @@ app.get("/projects/project-status", async (req, res) => {
       (SELECT COUNT(project_id) FROM project WHERE project_status = 'Expired') AS expired_project,
       (SELECT COUNT(project_id) FROM project WHERE project_status = 'Completed') AS completed_project `);
     res.json(projectStatus.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+app.get("/projects/task-status", async (req, res) => {
+  try {
+    const taskStatus = await pool.query(`SELECT 
+      (SELECT COUNT(task_id) FROM task) AS total_task, 
+      (SELECT COUNT(task_id) FROM task WHERE task_status = 'New') AS new_task,
+      (SELECT COUNT(task_id) FROM task WHERE task_status = 'Ongoing') AS ongoing_task,
+      (SELECT COUNT(task_id) FROM task WHERE task_status = 'Expired') AS expired_task,
+      (SELECT COUNT(task_id) FROM task WHERE task_status = 'Completed') AS completed_task `);
+    res.json(taskStatus.rows[0]);
   } catch (err) {
     console.error(err.message);
   }

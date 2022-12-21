@@ -3,8 +3,8 @@ import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress } fro
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
 import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
-import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlineTrash, HiOutlinePencil, HiOutlineCalendar } from "react-icons/hi";
-import { Link, useNavigate } from "react-router-dom";
+import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlinePencil, HiOutlineTrash, HiOutlineCalendar } from "react-icons/hi";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
@@ -42,6 +42,7 @@ function FilterInput({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) {
   return (
     <div className="flex justify-end">
       <div className="flex items-center">
+        <span className="mr-2">Search:</span>
         <Input
           size="sm"
           value={value || ""}
@@ -58,8 +59,8 @@ function FilterInput({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) {
   );
 }
 
-function fuzzyTextFilterFn(data, id, filterValue) {
-  return matchSorter(data, filterValue, { keys: [(row) => row.values[id]] });
+function fuzzyTextFilterFn(rows, id, filterValue) {
+  return matchSorter(rows, filterValue, { keys: [(row) => row.values[id]] });
 }
 
 fuzzyTextFilterFn.autoRemove = (val) => !val;
@@ -102,18 +103,98 @@ const ActionColumn = ({ row }) => {
   );
 };
 
-const ReactTable = ({ columns }) => {
+const columns = [
+  {
+    Header: "Task Name",
+    accessor: "task_name",
+    sortable: true,
+  },
+  {
+    Header: "Tas Status",
+    accessor: "task_status",
+    sortable: true,
+    Cell: (props) => {
+      const { task_status } = props.row.original;
+      if (task_status === "Completed") {
+        return <span className="bg-emerald-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+      } else if (task_status === "Expired") {
+        return <span className="bg-rose-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+      } else if (task_status === "Ongoing") {
+        return <span className="bg-amber-600 text-white rounded-full py-1 px-2">{task_status}</span>;
+      } else {
+        return <span className="bg-cyan-700 text-white rounded-full py-1 px-2">{task_status}</span>;
+      }
+    },
+  },
+  {
+    Header: "Days Progress",
+    accessor: "days_progress",
+    sortable: true,
+    minWidth: 600,
+    width: 600,
+    Cell: (props) => {
+      const { task_end, task_start } = props.row.original;
+      const startDate1 = dayjs(task_start).format("MM/DD/YYYY");
+      const endDate1 = dayjs(task_end).format("MM/DD/YYYY");
+      const currentDate1 = dayjs().format("MM/DD/YYYY");
+      var startDate = new Date(startDate1);
+      var endDate = new Date(endDate1);
+      var currentDate = new Date(currentDate1);
+      var numOfDates = getBusinessDatesCount(startDate, endDate);
+      var daysLeft = getDaysLeftCount(currentDate, endDate);
+      var daysOnGoing = numOfDates - daysLeft;
+      const progressDaysInt = Math.ceil((parseInt(daysOnGoing) / parseInt(numOfDates)) * 100);
+      const progressDays = progressDaysInt.toString();
+      return (
+        <div className="my-1 sm:my-0 col-span-12 sm:col-span-2 md:col-span-2 lg:col-span-2 md:flex md:items-center md:justify-end">
+          <Tooltip title="Task Start">
+            <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_start).format("DD/MM/YYYY")}</span>
+          </Tooltip>
+          <span className="ml-1 rtl:mr-1 whitespace-nowrap"> | </span>
+          <Tooltip title="Task End">
+            <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_end).format("DD/MM/YYYY")}</span>
+          </Tooltip>
+          <Progress className="mr-2 ml-2" percent={progressDays} />
+          <div className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-full">
+            <HiOutlineCalendar className="text-base" />
+            <Tooltip title="Days Ongoing">
+              <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysOnGoing}</span>
+            </Tooltip>
+            <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+            <Tooltip title="Days Left">
+              <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
+            </Tooltip>
+            <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+            <Tooltip title="Total Work Days">
+              <span className="ml-1 rtl:mr-1 whitespace-nowrap">{numOfDates}</span>
+            </Tooltip>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    Header: "",
+    id: "action",
+    accessor: (row) => row,
+    Cell: (props) => <ActionColumn row={props.row.original} />,
+  },
+];
+
+const TaskProjectTable = () => {
+  let { id } = useParams();
   const [data, setData] = useState([]);
-  const getData = async () => {
-    try {
-      const response = await fetch("http://localhost:5002/projects/tasks");
-      const jsonData = await response.json();
-      setData(jsonData);
-    } catch (err) {
-      console.error(err.message);
-    }
-  };
+
   useEffect(() => {
+    const getData = async () => {
+      try {
+        const response = await fetch(`http://localhost:5002/tasks/${id}`);
+        const jsonData = await response.json();
+        setData(jsonData);
+      } catch (err) {
+        console.error(err.message);
+      }
+    };
     getData();
   }, []);
 
@@ -122,8 +203,8 @@ const ReactTable = ({ columns }) => {
   const filterTypes = useMemo(
     () => ({
       fuzzyText: fuzzyTextFilterFn,
-      text: (data, id, filterValue) => {
-        return data.filter((row) => {
+      text: (rows, id, filterValue) => {
+        return rows.filter((row) => {
           const rowValue = row.values[id];
           return rowValue !== undefined ? String(rowValue).toLowerCase().startsWith(String(filterValue).toLowerCase()) : true;
         });
@@ -170,9 +251,10 @@ const ReactTable = ({ columns }) => {
 
   return (
     <>
-      <Card className="mb-4">
+      <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3>Tasks List</h3>
+          <h3>Tasks</h3>
+
           <div className="flex flex-col lg:flex-row lg:items-center justify-end">
             <FilterInput preGlobalFilteredRows={preGlobalFilteredRows} globalFilter={state.globalFilter} setGlobalFilter={setGlobalFilter} />
             <Link className="block lg:inline-block md:mx-2" to="/" target="_blank" download>
@@ -186,6 +268,13 @@ const ReactTable = ({ columns }) => {
               </Button>
             </Link>
           </div>
+        </div>
+        <div className="mb-4">
+          <Link to="/project/dashboard">
+            <span>Project</span>
+          </Link>
+          <span className="mx-2"> / </span>
+          <span>Tasks</span>
         </div>
         <Table {...getTableProps()}>
           <THead>
@@ -231,102 +320,4 @@ const ReactTable = ({ columns }) => {
   );
 };
 
-function TableTask() {
-  const columns = useMemo(
-    () => [
-      {
-        Header: "No Change Request",
-        accessor: "project_no",
-        sortable: true,
-      },
-      {
-        Header: "Project Name",
-        accessor: "project_name",
-        sortable: true,
-      },
-      {
-        Header: "Task Name",
-        accessor: "task_name",
-        sortable: true,
-      },
-      {
-        Header: "Task Status",
-        accessor: "task_status",
-        sortable: true,
-        Cell: (props) => {
-          const { task_status } = props.row.original;
-          if (task_status === "Completed") {
-            return <span className="bg-emerald-700 text-white rounded-full py-1 px-2">{task_status}</span>;
-          } else if (task_status === "Expired") {
-            return <span className="bg-rose-700 text-white rounded-full py-1 px-2">{task_status}</span>;
-          } else if (task_status === "Ongoing") {
-            return <span className="bg-amber-600 text-white rounded-full py-1 px-2">{task_status}</span>;
-          } else {
-            return <span className="bg-cyan-700 text-white rounded-full py-1 px-2">{task_status}</span>;
-          }
-        },
-      },
-      {
-        Header: "Days Progress",
-        accessor: "days_progress",
-        sortable: true,
-        minWidth: 600,
-        width: 600,
-        Cell: (props) => {
-          const { task_end, task_start } = props.row.original;
-          const startDate1 = dayjs(task_start).format("MM/DD/YYYY");
-          const endDate1 = dayjs(task_end).format("MM/DD/YYYY");
-          const currentDate1 = dayjs().format("MM/DD/YYYY");
-          var startDate = new Date(startDate1);
-          var endDate = new Date(endDate1);
-          var currentDate = new Date(currentDate1);
-          var numOfDates = getBusinessDatesCount(startDate, endDate);
-          var daysLeft = getDaysLeftCount(currentDate, endDate);
-          var daysOnGoing = numOfDates - daysLeft;
-          const progressDaysInt = Math.ceil((parseInt(daysOnGoing) / parseInt(numOfDates)) * 100);
-          const progressDays = progressDaysInt.toString();
-          return (
-            <div className="my-1 sm:my-0 col-span-12 sm:col-span-2 md:col-span-2 lg:col-span-2 md:flex md:items-center md:justify-end">
-              <Tooltip title="Task Start">
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_start).format("DD/MM/YYYY")}</span>
-              </Tooltip>
-              <span className="ml-1 rtl:mr-1 whitespace-nowrap"> | </span>
-              <Tooltip title="Task End">
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">{dayjs(task_end).format("DD/MM/YYYY")}</span>
-              </Tooltip>
-              <Progress className="mr-2 ml-2" percent={progressDays} />
-              <div className="inline-flex items-center px-2 py-1 border border-gray-300 rounded-full">
-                <HiOutlineCalendar className="text-base" />
-                <Tooltip title="Days Ongoing">
-                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysOnGoing}</span>
-                </Tooltip>
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
-                <Tooltip title="Days Left">
-                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
-                </Tooltip>
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
-                <Tooltip title="Total Work Days">
-                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{numOfDates}</span>
-                </Tooltip>
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        Header: "",
-        id: "action",
-        accessor: (row) => row,
-        Cell: (props) => <ActionColumn row={props.row.original} />,
-      },
-    ],
-    []
-  );
-  return (
-    <div>
-      <ReactTable columns={columns} />
-    </div>
-  );
-}
-
-export default TableTask;
+export default TaskProjectTable;
