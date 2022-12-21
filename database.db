@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS public.project
 (
-    project_id integer NOT NULL DEFAULT nextval('project_project_id_seq'::regclass),
+    project_id serial,
     project_no character varying(13) COLLATE pg_catalog."default" NOT NULL,
     project_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
     project_description text COLLATE pg_catalog."default",
@@ -29,8 +29,8 @@ ALTER TABLE IF EXISTS public.project
 
 CREATE TABLE IF NOT EXISTS public.resource
 (
-    resource_id integer NOT NULL DEFAULT nextval('resources_resource_id_seq'::regclass),
-    project_id integer NOT NULL DEFAULT nextval('resources_project_id_seq'::regclass),
+    resource_id serial,
+    project_id integer NOT NULL,
     name character varying(255) COLLATE pg_catalog."default" NOT NULL,
     "position" character varying(100) COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT resources_pkey PRIMARY KEY (resource_id),
@@ -54,8 +54,8 @@ ALTER TABLE IF EXISTS public.resource
 
 CREATE TABLE IF NOT EXISTS public.task
 (
-    task_id integer NOT NULL DEFAULT nextval('task_task_id_seq'::regclass),
-    project_id integer NOT NULL DEFAULT nextval('task_project_id_seq'::regclass),
+    task_id serial,
+    project_id integer NOT NULL,
     task_name character varying(255) COLLATE pg_catalog."default",
     task_status character varying(100) COLLATE pg_catalog."default",
     task_start date,
