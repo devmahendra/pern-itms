@@ -113,7 +113,7 @@ const ResourceProject = () => {
   };
   useEffect(() => {
     getData();
-  }, []);
+  });
 
   const totalData = data.length;
 
@@ -220,7 +220,7 @@ const ResourceProject = () => {
           })}
           {page?.length === 0 && (
             <Tr>
-              <Td className="text-center" colspan={allColumns.length}>
+              <Td className="text-center" colSpan={allColumns.length}>
                 No data found!
               </Td>
             </Tr>

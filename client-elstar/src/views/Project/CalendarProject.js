@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import classNames from "classnames";
 import { Card } from "components/ui";
 
@@ -13,7 +13,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import "@fullcalendar/common/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
-import { useDispatch, useSelector } from "react-redux";
+// import { useDispatch, useSelector } from "react-redux";
 
 injectReducer("projectCalendar", reducer);
 
@@ -21,9 +21,12 @@ const CalendarProject = () => {
   const [data, setData] = useState([]);
   const getData = async () => {
     try {
-      const response = await fetch("http://localhost:5002/projects");
+      const response = await fetch("http://localhost:5002/projects/calendar");
       const jsonData = await response.json();
-      setData(jsonData);
+
+      if(jsonData.status){
+        setData(jsonData.data);
+      }
     } catch (err) {
       console.error(err.message);
     }

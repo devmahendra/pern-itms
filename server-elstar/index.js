@@ -17,6 +17,37 @@ app.get("/projects", async (req, res) => {
   }
 });
 
+//calendar events mapping 
+app.get("/projects/calendar", async (req, res) => {
+  try {
+    const allProjects = await pool.query("SELECT * FROM project ");
+
+    let events = [];
+    if(allProjects.rows){
+      events = allProjects.rows.map((project) => {
+        return {
+          title: project.project_name,
+          start: project.project_start,
+          end: project.project_end,
+          backgroundColor: "#FFC107",
+          borderColor: "#FFC107",
+        };
+      });
+    }
+
+    res.json({
+      status: true,
+      message: 'success',
+      data: events
+    });
+  } catch (err) {
+    res.json({
+      status: false,
+      message: err.message
+    });
+  }
+});
+
 //get all projects
 app.get("/projectss", async (req, res) => {
   try {

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
 import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlineCalendar, HiOutlineTrash, HiOutlinePencil, HiOutlineUserGroup, HiOutlineClipboardCheck } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
@@ -51,14 +51,14 @@ const pageSizeOption = [
 ];
 
 const ActionColumn = ({ row }) => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const { textTheme } = useThemeClass();
   const navigate = useNavigate();
 
-  const onDelete = () => {
-    dispatch("/");
-    dispatch("/");
-  };
+  // const onDelete = () => {
+  //   dispatch("/");
+  //   dispatch("/");
+  // };
 
   const onResources = useCallback(() => {
     navigate(`/project/resource-project/${row?.project_id}`);
@@ -215,7 +215,7 @@ const ReactTable = ({ columns }) => {
             })}
             {page?.length === 0 && (
               <Tr>
-                <Td className="text-center" colspan={allColumns.length}>
+                <Td className="text-center" colSpan={allColumns.length}>
                   No data found!
                 </Td>
               </Tr>

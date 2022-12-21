@@ -213,7 +213,7 @@ const ReactTable = ({ columns }) => {
             })}
             {page?.length === 0 && (
               <Tr>
-                <Td className="text-center" colspan={allColumns.length}>
+                <Td className="text-center" colSpan={allColumns.length}>
                   No data found!
                 </Td>
               </Tr>
