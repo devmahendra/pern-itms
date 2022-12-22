@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.project
     project_status character varying(20) COLLATE pg_catalog."default" NOT NULL,
     project_start date NOT NULL,
     project_end date NOT NULL,
+    project_preferd character varying(20) COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT project_pkey PRIMARY KEY (project_id)
 )
 

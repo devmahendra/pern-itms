@@ -18,19 +18,43 @@ app.get("/projects", async (req, res) => {
 });
 
 //calendar events mapping 
-app.get("/projects/calendar", async (req, res) => {
+app.post("/projects/calendar", async (req, res) => {
   try {
-    const allProjects = await pool.query("SELECT * FROM project ");
+    let eventColors = {
+      red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-500 dark:text-red-100", dot: "bg-red-500" },
+      orange: { bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-500 dark:text-orange-100", dot: "bg-orange-500" },
+      amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-500 dark:text-amber-100", dot: "bg-amber-500" },
+      yellow: { bg: "bg-yellow-50 dark:bg-yellow-500/10", text: "text-yellow-500 dark:text-yellow-100", dot: "bg-yellow-500" },
+      lime: { bg: "bg-lime-50 dark:bg-lime-500/10", text: "text-lime-500 dark:text-lime-100", dot: "bg-lime-500" },
+      green: { bg: "bg-green-50 dark:bg-green-500/10", text: "text-green-500 dark:text-green-100", dot: "bg-green-500" },
+      emerald: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-500 dark:text-emerald-100", dot: "bg-emerald-500" },
+      teal: { bg: "bg-teal-50 dark:bg-teal-500/10", text: "text-teal-500 dark:text-teal-100", dot: "bg-teal-500" },
+      cyan: { bg: "bg-cyan-50 dark:bg-cyan-500/10", text: "text-cyan-500 dark:text-cyan-100", dot: "bg-cyan-500" },
+      sky: { bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-500 dark:text-sky-100", dot: "bg-sky-500" },
+      blue: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-500 dark:text-blue-100", dot: "bg-blue-500" },
+      indigo: { bg: "bg-indigo-50 dark:bg-indigo-500/10", text: "text-indigo-500 dark:text-indigo-100", dot: "bg-indigo-500" },
+      purple: { bg: "bg-purple-50 dark:bg-purple-500/10", text: "text-purple-500 dark:text-purple-100", dot: "bg-purple-500" },
+      fuchsia: { bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10", text: "text-fuchsia-500 dark:text-fuchsia-100", dot: "bg-fuchsia-500" },
+      pink: { bg: "bg-pink-50 dark:bg-pink-500/10", text: "text-pink-500 dark:text-pink-100", dot: "bg-pink-500" },
+      rose: { bg: "bg-rose-50 dark:bg-rose-500/10", text: "text-rose-500 dark:text-rose-100", dot: "bg-rose-500" },
+    };
+
+    const { start, end } = req?.body
+    console.log("start", start)
+    console.log("end", end)
+    const allProjects = await pool.query(`
+      SELECT distinct p.project_id as project_id, p.project_no, p.project_name, p.project_description, p.project_owner, p.project_priority, p.project_status, p.project_start, p.project_end, p.project_prefered FROM project p 
+      JOIN (SELECT generate_series($1::date, $2::date, '1 day') as dt) as z on p.project_start <= z.dt::date AND p.project_end >= z.dt::date    
+    `, [start, end]);
 
     let events = [];
     if(allProjects.rows){
       events = allProjects.rows.map((project) => {
         return {
-          title: project.project_name,
+          title: project.project_no +' - '+ project.project_name,
           start: project.project_start,
           end: project.project_end,
-          backgroundColor: "#FFC107",
-          borderColor: "#FFC107",
+          eventColor: eventColors[project.project_prefered],
         };
       });
     }
