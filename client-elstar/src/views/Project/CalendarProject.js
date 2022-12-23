@@ -32,7 +32,7 @@ const CalendarProject = () => {
         }),
       });
       const data = await res.json();
-      if(data?.status){
+      if (data?.status) {
         setData(data.data);
       }
     } catch (error) {
@@ -44,13 +44,16 @@ const CalendarProject = () => {
     // getData();
   }, []);
 
-  const handleMonthChange = ((payload) => {
-    console.log(payload)
+  const handleMonthChange = (payload) => {
+    console.log(payload);
     getData(payload.startStr, payload.endStr);
-  });
+  };
 
   return (
     <Card className="mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3>Projects Calendar</h3>
+      </div>
       <div className={classNames("calendar")}>
         <FullCalendar
           events={data}
@@ -64,7 +67,7 @@ const CalendarProject = () => {
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           datesSet={handleMonthChange}
           eventContent={(arg) => {
-            console.log("test", arg.event)
+            console.log("test", arg.event);
             const { extendedProps } = arg.event;
             const { isEnd, isStart } = arg;
             return (

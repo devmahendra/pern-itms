@@ -262,16 +262,22 @@ function TableProject() {
         Header: "No Change Request",
         accessor: "project_no",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Project Name",
         accessor: "project_name",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Project Owner",
         accessor: "project_owner",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Project Priority",
