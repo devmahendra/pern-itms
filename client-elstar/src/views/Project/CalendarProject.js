@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import classNames from "classnames";
 import { Card, Badge } from "components/ui";
 
-import reducer from "./store";
-import { injectReducer } from "store/index";
-
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -14,8 +11,6 @@ import "@fullcalendar/common/main.css";
 import "@fullcalendar/daygrid/main.css";
 import "@fullcalendar/timegrid/main.css";
 // import { useDispatch, useSelector } from "react-redux";
-
-injectReducer("projectCalendar", reducer);
 
 const CalendarProject = () => {
   const [data, setData] = useState([]);
