@@ -2,10 +2,54 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const pool = require("./db");
+const dayjs = require("dayjs");
 
 //middleware
 app.use(cors());
 app.use(express.json());
+
+app.post("/projects/create-project", async (req, res) => {
+  try {
+    const { project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered } = req.body;
+    const tasks = req.body.tasks;
+    const resources = req.body.resources;
+
+    const results = await pool.query(
+      `
+      INSERT INTO project (project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING project_id
+      `,
+      [project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered]
+    );
+    const projectId = results.rows[0].project_id;
+
+    for (let i = 0; i < tasks.length; i++) {
+      await pool.query(
+        `
+        INSERT INTO task (project_id, task_name, task_status, task_start, task_end, task_prefered)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        `,
+        [projectId, tasks[i].task_name, tasks[i].task_status, tasks[i].task_start, tasks[i].task_end, project_prefered]
+      );
+    }
+
+    for (let i = 0; i < resources.length; i++) {
+      await pool.query(
+        `
+        INSERT INTO resource (project_id, name, position)
+        VALUES ($1, $2, $3)
+        `,
+        [projectId, resources[i].name, resources[i].position]
+      );
+    }
+
+    res.send({ message: "Data added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error);
+  }
+});
 
 //get all projects
 app.get("/projects", async (req, res) => {
