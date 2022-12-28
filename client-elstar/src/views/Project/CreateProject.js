@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 import { Field, FieldArray, getIn, Form, Formik } from "formik";
 import * as Yup from "yup";
-//import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const optionsOwner = [
   { value: "Divisi Perencanaan", label: "Divisi Perencanaan" },
@@ -14,27 +14,27 @@ const optionsOwner = [
   { value: "Divisi Manajemen Risiko dan Kepatuhan", label: "Divisi Manajemen Risiko dan Kepatuhan" },
 ];
 
-// const optionsResource = [
-//   { value: "Galuh", label: "Galuh" },
-//   { value: "Mahendra", label: "Mahendra" },
-//   { value: "Fandy", label: "Fandy" },
-//   { value: "Shinta", label: "Shinta" },
-//   { value: "Dea", label: "Dea" },
-//   { value: "Anita", label: "Anita" },
-//   { value: "Adji", label: "Adji" },
-//   { value: "Trisno", label: "Trisno" },
-//   { value: "Bima", label: "Bima" },
-//   { value: "Candra", label: "Candra" },
-//   { value: "Ian", label: "Ian" },
-//   { value: "Brian", label: "Brian" },
-//   { value: "Qoirudin", label: "Qoirudin" },
-//   { value: "Yoga", label: "Yoga" },
-//   { value: "Resta", label: "Resta" },
-//   { value: "Heru", label: "Heru" },
-//   { value: "Vero", label: "Vero" },
-//   { value: "Roni", label: "Roni" },
-//   { value: "Ari", label: "Ari" },
-// ];
+const optionsResource = [
+  { value: "Galuh", label: "Galuh" },
+  { value: "Mahendra", label: "Mahendra" },
+  { value: "Fandy", label: "Fandy" },
+  { value: "Shinta", label: "Shinta" },
+  { value: "Dea", label: "Dea" },
+  { value: "Anita", label: "Anita" },
+  { value: "Adji", label: "Adji" },
+  { value: "Trisno", label: "Trisno" },
+  { value: "Bima", label: "Bima" },
+  { value: "Candra", label: "Candra" },
+  { value: "Ian", label: "Ian" },
+  { value: "Brian", label: "Brian" },
+  { value: "Qoirudin", label: "Qoirudin" },
+  { value: "Yoga", label: "Yoga" },
+  { value: "Resta", label: "Resta" },
+  { value: "Heru", label: "Heru" },
+  { value: "Vero", label: "Vero" },
+  { value: "Roni", label: "Roni" },
+  { value: "Ari", label: "Ari" },
+];
 
 const optionsPrefered = [
   { value: "red", label: <p className="text-red-500">Red</p> },
@@ -76,7 +76,7 @@ const validationSchema = Yup.object().shape({
   tasks: Yup.array().of(
     Yup.object().shape({
       task_name: Yup.string().required("Please input Task Name!"),
-      task_status: Yup.string().required("Please select one!"),
+      // task_status: Yup.string().required("Please select one!"),
       task_start: Yup.date().required("Date Required!").nullable(),
       task_end: Yup.date().required("Date Required!").nullable(),
     })
@@ -99,7 +99,7 @@ const fieldFeedback = (form, name) => {
 };
 
 const CreateProject = () => {
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
   return (
     <div>
       <Formik
@@ -151,11 +151,11 @@ const CreateProject = () => {
             });
             console.log(response);
             openNotification("success");
-            //setSubmitting(false);
-            // resetForm();
-            // setTimeout(() => {
-            //   navigate("/project/dashboard");
-            // }, 1500);
+            setSubmitting(false);
+            resetForm();
+            setTimeout(() => {
+              navigate("/project/dashboard");
+            }, 1500);
           } catch (error) {
             console.log(error);
           }
@@ -251,7 +251,6 @@ const CreateProject = () => {
                               {tasks && tasks.length > 0
                                 ? tasks.map((_, index) => {
                                     const taskNameFeedBack = fieldFeedback(form, `tasks[${index}].task_name`);
-                                    const taskStatusFeedBack = fieldFeedback(form, `tasks[${index}].task_status`);
                                     const taskStartFeedBack = fieldFeedback(form, `tasks[${index}].task_start`);
                                     const taskEndFeedBack = fieldFeedback(form, `tasks[${index}].task_end`);
 
@@ -260,9 +259,7 @@ const CreateProject = () => {
                                         <FormItem label="Name" invalid={taskNameFeedBack.invalid} errorMessage={taskNameFeedBack.errorMessage}>
                                           <Field invalid={taskNameFeedBack.invalid} placeholder="Task Name" name={`tasks[${index}].task_name`} type="text" component={Input} />
                                         </FormItem>
-                                        <FormItem label="Status" invalid={taskStatusFeedBack.invalid} errorMessage={taskStatusFeedBack.errorMessage}>
-                                          <Field invalid={taskStatusFeedBack.invalid} placeholder="Task Name" name={`tasks[${index}].task_status`} type="text" component={Input} />
-                                        </FormItem>
+
                                         <FormItem label="Start" invalid={taskStartFeedBack.invalid} errorMessage={taskStartFeedBack.errorMessage}>
                                           <Field invalid={taskStartFeedBack.invalid} name={`tasks[${index}].task_start`}>
                                             {({ field, form }) => (
@@ -327,7 +324,20 @@ const CreateProject = () => {
                                     return (
                                       <div key={index}>
                                         <FormItem label="Name" invalid={resourceNameFeedBack.invalid} errorMessage={resourceNameFeedBack.errorMessage}>
-                                          <Field invalid={resourceNameFeedBack.invalid} name={`resources[${index}].name`} type="text" component={Input} />
+                                          {/* <Field invalid={resourceNameFeedBack.invalid} name={`resources[${index}].name`} type="text" component={Input}>
+                                            <Select options={optionsResource}></Select>
+                                          </Field> */}
+                                          <Field name={`resources[${index}].name`}>
+                                            {({ field, form }) => (
+                                              <Select
+                                                field={field}
+                                                form={form}
+                                                options={optionsResource}
+                                                value={optionsResource.filter((option) => option.value === resources[index].name)}
+                                                onChange={(option) => form.setFieldValue(field.name, option.value)}
+                                              />
+                                            )}
+                                          </Field>
                                         </FormItem>
                                         <FormItem label="" invalid={resourcePositionFeedBack.invalid} errorMessage={resourcePositionFeedBack.errorMessage}>
                                           <Field invalid={resourcePositionFeedBack.invalid} name={`resources[${index}].position`}>

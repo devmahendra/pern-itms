@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const pool = require("./db");
-const dayjs = require("dayjs");
 
 //middleware
 app.use(cors());
@@ -30,7 +29,7 @@ app.post("/projects/create-project", async (req, res) => {
         INSERT INTO task (project_id, task_name, task_status, task_start, task_end, task_prefered)
         VALUES ($1, $2, $3, $4, $5, $6)
         `,
-        [projectId, tasks[i].task_name, tasks[i].task_status, tasks[i].task_start, tasks[i].task_end, project_prefered]
+        [projectId, tasks[i].task_name, project_status, tasks[i].task_start, tasks[i].task_end, project_prefered]
       );
     }
 
