@@ -238,16 +238,22 @@ function TableTask() {
         Header: "No Change Request",
         accessor: "project_no",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Project Name",
         accessor: "project_name",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Task Name",
         accessor: "task_name",
         sortable: true,
+        minWidth: 220,
+        width: 220,
       },
       {
         Header: "Task Status",
@@ -301,12 +307,12 @@ function TableTask() {
                   <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysOnGoing}</span>
                 </Tooltip>
                 <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
-                <Tooltip title="Days Left">
-                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
-                </Tooltip>
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
                 <Tooltip title="Total Work Days">
                   <span className="ml-1 rtl:mr-1 whitespace-nowrap">{numOfDates}</span>
+                </Tooltip>
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+                <Tooltip title="Days Left">
+                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
                 </Tooltip>
               </div>
             </div>

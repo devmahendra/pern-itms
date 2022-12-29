@@ -280,11 +280,6 @@ function TableProject() {
         width: 220,
       },
       {
-        Header: "Project Priority",
-        accessor: "project_priority",
-        sortable: true,
-      },
-      {
         Header: "Project Status",
         accessor: "project_status",
         sortable: true,
@@ -336,12 +331,12 @@ function TableProject() {
                   <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysOnGoing}</span>
                 </Tooltip>
                 <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
-                <Tooltip title="Days Left">
-                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
-                </Tooltip>
-                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
                 <Tooltip title="Total Work Days">
                   <span className="ml-1 rtl:mr-1 whitespace-nowrap">{numOfDates}</span>
+                </Tooltip>
+                <span className="ml-1 rtl:mr-1 whitespace-nowrap">/</span>
+                <Tooltip title="Days Left">
+                  <span className="ml-1 rtl:mr-1 whitespace-nowrap">{daysLeft}</span>
                 </Tooltip>
               </div>
             </div>
@@ -356,7 +351,7 @@ function TableProject() {
         width: 300,
         Cell: (props) => {
           const { total_task, completed_task } = props.row.original;
-          const progressTaskInt = (parseInt(completed_task) / parseInt(total_task)) * 100;
+          const progressTaskInt = Math.ceil((parseInt(completed_task) / parseInt(total_task)) * 100);
           const progressTask = progressTaskInt.toString();
 
           return (

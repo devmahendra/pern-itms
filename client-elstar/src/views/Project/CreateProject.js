@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Button, Select, DatePicker, Radio, FormItem, FormContainer, Card, Notification, toast } from "components/ui";
+import { Input, Button, Select, DatePicker, FormItem, FormContainer, Card, Notification, toast, InputGroup } from "components/ui";
 import { HiMinus } from "react-icons/hi";
 import dayjs from "dayjs";
 
@@ -13,6 +13,8 @@ const optionsOwner = [
   { value: "Divisi Kredit", label: "Divisi Kredit" },
   { value: "Divisi Manajemen Risiko dan Kepatuhan", label: "Divisi Manajemen Risiko dan Kepatuhan" },
 ];
+
+const { Addon } = InputGroup;
 
 const optionsResource = [
   { value: "Galuh", label: "Galuh" },
@@ -67,24 +69,16 @@ const validationSchema = Yup.object().shape({
   project_no: Yup.string().min(13, "Too Short!").max(13, "Too Long!").required("Please input Project No!"),
   project_name: Yup.string().min(1, "Too Short!").max(255, "Too Long!").required("Please input Project Name"),
   project_owner: Yup.string().required("Please select one!"),
-  project_priority: Yup.string().required("Please select one!"),
-  // project_status: Yup.string().required("Please select one!"),
   project_start: Yup.date().required("Date Required!").nullable(),
   project_end: Yup.date().required("Date Required!").nullable(),
   project_prefered: Yup.string().required("Please select one!"),
+  resources: Yup.array().min(1, "At least one is selected!"),
 
   tasks: Yup.array().of(
     Yup.object().shape({
       task_name: Yup.string().required("Please input Task Name!"),
-      // task_status: Yup.string().required("Please select one!"),
       task_start: Yup.date().required("Date Required!").nullable(),
       task_end: Yup.date().required("Date Required!").nullable(),
-    })
-  ),
-  resources: Yup.array().of(
-    Yup.object().shape({
-      name: Yup.string().required("Please input Task Name!"),
-      position: Yup.string().required("Please select one!"),
     })
   ),
 });
@@ -109,23 +103,17 @@ const CreateProject = () => {
           project_name: "",
           project_description: "",
           project_owner: "",
-          project_priority: "",
           project_status: "",
           project_start: null,
           project_end: null,
           project_prefered: "",
+          resources: [],
           tasks: [
             {
               task_name: "",
               task_status: "",
               task_start: null,
               task_end: null,
-            },
-          ],
-          resources: [
-            {
-              name: "",
-              position: "",
             },
           ],
         }}
@@ -151,11 +139,12 @@ const CreateProject = () => {
             });
             console.log(response);
             openNotification("success");
-            setSubmitting(false);
-            resetForm();
-            setTimeout(() => {
-              navigate("/project/dashboard");
-            }, 1500);
+            alert(JSON.stringify(values, null, 2));
+            // setSubmitting(false);
+            // resetForm();
+            // setTimeout(() => {
+            //   navigate("/project/dashboard");
+            // }, 1500);
           } catch (error) {
             console.log(error);
           }
@@ -163,71 +152,28 @@ const CreateProject = () => {
       >
         {({ values, touched, errors, resetForm }) => {
           const tasks = values.tasks;
-          const resources = values.resources;
 
           return (
             <Form>
               <FormContainer>
-                <div className="grid grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-5 mb-4">
-                  <Card className="mb-4 col-span-1">
-                    <h4 className="mb-4">Project Info</h4>
-                    <FormItem label="Project No" asterisk invalid={errors.project_no && touched.project_no} errorMessage={errors.project_no}>
+                {/* <div className="grid grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-5 mb-4"> */}
+                <Card className="mb-4 col-span-1">
+                  <h4 className="mb-4">Project Info</h4>
+                  <div className="md:grid grid-cols-6 gap-4">
+                    <FormItem className="col-span-1" label="Project No" asterisk invalid={errors.project_no && touched.project_no} errorMessage={errors.project_no}>
                       <Field type="text" name="project_no" placeholder="ITF-08-100123" component={Input} />
                     </FormItem>
-                    <FormItem label="Project Name" asterisk invalid={errors.project_name && touched.project_name} errorMessage={errors.project_name}>
-                      <Field type="text" name="project_name" placeholder="" component={Input} />
+                    <FormItem className="col-span-1" label="Project Name" asterisk invalid={errors.project_name && touched.project_name} errorMessage={errors.project_name}>
+                      <Field type="text" name="project_name" placeholder="Name" component={Input} />
                     </FormItem>
-                    <FormItem label="Project Description" invalid={errors.project_description && touched.project_description} errorMessage={errors.project_description}>
-                      <Field type="text" name="project_description" placeholder="" component={Input} textArea />
-                    </FormItem>
-                    <FormItem label="Project Owner" asterisk invalid={errors.project_owner && touched.project_owner} errorMessage={errors.project_owner}>
+                    <FormItem className="col-span-1" label="Project Owner" asterisk invalid={errors.project_owner && touched.project_owner} errorMessage={errors.project_owner}>
                       <Field name="project_owner">
                         {({ field, form }) => (
                           <Select field={field} form={form} options={optionsOwner} value={optionsOwner.filter((option) => option.value === values.project_owner)} onChange={(option) => form.setFieldValue(field.name, option.value)} />
                         )}
                       </Field>
                     </FormItem>
-                    <FormItem label="Project Priority" asterisk invalid={errors.project_priority && touched.project_priority} errorMessage={errors.project_priority}>
-                      <Field name="project_priority">
-                        {({ field, form }) => (
-                          <Radio.Group value={values.project_priority} onChange={(val) => form.setFieldValue(field.name, val)}>
-                            <Radio value="Urgent">Urgent</Radio>
-                            <Radio value="High">High</Radio>
-                            <Radio value="Medium">Medium</Radio>
-                            <Radio value="Low">Low</Radio>
-                          </Radio.Group>
-                        )}
-                      </Field>
-                    </FormItem>
-                    <FormItem label="Project Start" asterisk invalid={errors.project_start && touched.project_start} errorMessage={errors.project_start}>
-                      <Field name="project_start" placeholder="Start Date">
-                        {({ field, form }) => (
-                          <DatePicker
-                            field={field}
-                            form={form}
-                            value={field.value}
-                            onChange={(date) => {
-                              form.setFieldValue(field.name, date);
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormItem>
-                    <FormItem label="Project End" asterisk invalid={errors.project_end && touched.project_end} errorMessage={errors.project_end}>
-                      <Field name="project_end" placeholder="End Date">
-                        {({ field, form }) => (
-                          <DatePicker
-                            field={field}
-                            form={form}
-                            value={field.value}
-                            onChange={(date) => {
-                              form.setFieldValue(field.name, date);
-                            }}
-                          />
-                        )}
-                      </Field>
-                    </FormItem>
-                    <FormItem label="Project Prefered" asterisk invalid={errors.project_prefered && touched.project_prefered} errorMessage={errors.project_prefered}>
+                    <FormItem className="col-span-1" label="Project Prefered" asterisk invalid={errors.project_prefered && touched.project_prefered} errorMessage={errors.project_prefered}>
                       <Field name="project_prefered">
                         {({ field, form }) => (
                           <Select
@@ -240,33 +186,106 @@ const CreateProject = () => {
                         )}
                       </Field>
                     </FormItem>
-                  </Card>
-                  <div className="col-span-3">
-                    <Card className="mb-4 col-span-3">
-                      <h4 className="mb-4">Project Tasks</h4>
-                      <FormContainer layout="inline">
-                        <FieldArray name="tasks">
-                          {({ form, remove, push }) => (
-                            <div>
-                              {tasks && tasks.length > 0
-                                ? tasks.map((_, index) => {
-                                    const taskNameFeedBack = fieldFeedback(form, `tasks[${index}].task_name`);
-                                    const taskStartFeedBack = fieldFeedback(form, `tasks[${index}].task_start`);
-                                    const taskEndFeedBack = fieldFeedback(form, `tasks[${index}].task_end`);
+                    <InputGroup className="mb-4 col-span-2">
+                      <FormItem label="Project Start" asterisk invalid={errors.project_start && touched.project_start} errorMessage={errors.project_start}>
+                        <Field name="project_start" placeholder="Start Date">
+                          {({ field, form }) => (
+                            <DatePicker
+                              placeholder="Start Date"
+                              field={field}
+                              form={form}
+                              value={field.value}
+                              maxDate={values.project_end}
+                              onChange={(date) => {
+                                form.setFieldValue(field.name, date);
+                              }}
+                            />
+                          )}
+                        </Field>
+                      </FormItem>
+                      <Addon>To</Addon>
+                      <FormItem label="Project End" asterisk invalid={errors.project_end && touched.project_end} errorMessage={errors.project_end}>
+                        <Field name="project_end" placeholder="End Date">
+                          {({ field, form }) => (
+                            <DatePicker
+                              placeholder="End Date"
+                              field={field}
+                              form={form}
+                              value={field.value}
+                              minDate={values.project_start}
+                              onChange={(date) => {
+                                form.setFieldValue(field.name, date);
+                              }}
+                            />
+                          )}
+                        </Field>
+                      </FormItem>
+                    </InputGroup>
+                  </div>
+                  <FormItem label="Project Description" invalid={errors.project_description && touched.project_description} errorMessage={errors.project_description}>
+                    <Field type="text" name="project_description" placeholder="" component={Input} textArea />
+                  </FormItem>
 
-                                    return (
-                                      <div key={index}>
-                                        <FormItem label="Name" invalid={taskNameFeedBack.invalid} errorMessage={taskNameFeedBack.errorMessage}>
-                                          <Field invalid={taskNameFeedBack.invalid} placeholder="Task Name" name={`tasks[${index}].task_name`} type="text" component={Input} />
-                                        </FormItem>
+                  <FormItem label="Project Resources" asterisk invalid={errors.resources && touched.resources} errorMessage={errors.resources}>
+                    <Field name="resources">
+                      {({ field, form }) => (
+                        <Select
+                          //componentAs={CreatableSelect}
+                          isMulti
+                          field={field}
+                          form={form}
+                          options={optionsResource}
+                          value={values.resources}
+                          onChange={(option) => {
+                            form.setFieldValue(field.name, option);
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </FormItem>
+                </Card>
 
-                                        <FormItem label="Start" invalid={taskStartFeedBack.invalid} errorMessage={taskStartFeedBack.errorMessage}>
+                <Card className="mb-4 col-span-3">
+                  <h4 className="mb-4">Project Tasks</h4>
+                  <FormContainer>
+                    <FieldArray name="tasks">
+                      {({ form, remove, push }) => (
+                        <div>
+                          {tasks && tasks.length > 0
+                            ? tasks.map((_, index) => {
+                                const taskNameFeedBack = fieldFeedback(form, `tasks[${index}].task_name`);
+                                const taskStartFeedBack = fieldFeedback(form, `tasks[${index}].task_start`);
+                                const taskEndFeedBack = fieldFeedback(form, `tasks[${index}].task_end`);
+
+                                const dateNow = dayjs();
+                                const taskStart = tasks[index].task_start;
+                                const taskEnd = tasks[index].task_end;
+
+                                if (dateNow >= taskEnd) {
+                                  tasks[index].task_status = "Completed";
+                                } else if (dateNow <= taskEnd && dateNow >= taskStart) {
+                                  tasks[index].task_status = "Ongoing";
+                                } else {
+                                  tasks[index].task_status = "New";
+                                }
+
+                                return (
+                                  <div key={index}>
+                                    <div className="md:grid grid-cols-3 gap-4">
+                                      <FormItem className="col-span-1" label="Task Name" invalid={taskNameFeedBack.invalid} errorMessage={taskNameFeedBack.errorMessage}>
+                                        <Field invalid={taskNameFeedBack.invalid} placeholder="Name" name={`tasks[${index}].task_name`} type="text" component={Input} />
+                                      </FormItem>
+                                      <InputGroup className="col-span-2">
+                                        <FormItem label="Task Start" invalid={taskStartFeedBack.invalid} errorMessage={taskStartFeedBack.errorMessage}>
                                           <Field invalid={taskStartFeedBack.invalid} name={`tasks[${index}].task_start`}>
                                             {({ field, form }) => (
                                               <DatePicker
+                                                placeholder="Start Date"
                                                 field={field}
                                                 form={form}
                                                 value={field.value}
+                                                minDate={values.project_start}
+                                                maxDate={tasks[index].task_end || values.project_end}
                                                 onChange={(date) => {
                                                   form.setFieldValue(field.name, date);
                                                 }}
@@ -274,13 +293,17 @@ const CreateProject = () => {
                                             )}
                                           </Field>
                                         </FormItem>
-                                        <FormItem label="End" invalid={taskEndFeedBack.invalid} errorMessage={taskEndFeedBack.errorMessage}>
+                                        <Addon>To</Addon>
+                                        <FormItem label="Task End" invalid={taskEndFeedBack.invalid} errorMessage={taskEndFeedBack.errorMessage}>
                                           <Field invalid={taskEndFeedBack.invalid} name={`tasks[${index}].task_end`}>
                                             {({ field, form }) => (
                                               <DatePicker
+                                                placeholder="End Date"
                                                 field={field}
                                                 form={form}
                                                 value={field.value}
+                                                minDate={tasks[index].task_start || values.project_start}
+                                                maxDate={values.project_end}
                                                 onChange={(date) => {
                                                   form.setFieldValue(field.name, date);
                                                 }}
@@ -288,92 +311,32 @@ const CreateProject = () => {
                                             )}
                                           </Field>
                                         </FormItem>
-
-                                        <Button shape="circle" size="sm" icon={<HiMinus />} onClick={() => remove(index)} />
-                                      </div>
-                                    );
-                                  })
-                                : null}
-                              <div>
-                                <Button
-                                  type="button"
-                                  className="ltr:mr-2 rtl:ml-2"
-                                  onClick={() => {
-                                    push({ task_name: "", task_status: "", task_start: "", task_end: "" });
-                                  }}
-                                >
-                                  Add a Task
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </FieldArray>
-                      </FormContainer>
-                    </Card>
-                    <Card className="mb-4 col-span-3">
-                      <h4 className="mb-4">Project Resources</h4>
-                      <FormContainer layout="inline">
-                        <FieldArray name="resources">
-                          {({ form, remove, push }) => (
-                            <div>
-                              {resources && resources.length > 0
-                                ? resources.map((_, index) => {
-                                    const resourceNameFeedBack = fieldFeedback(form, `resources[${index}].name`);
-                                    const resourcePositionFeedBack = fieldFeedback(form, `resources[${index}].position`);
-
-                                    return (
-                                      <div key={index}>
-                                        <FormItem label="Name" invalid={resourceNameFeedBack.invalid} errorMessage={resourceNameFeedBack.errorMessage}>
-                                          {/* <Field invalid={resourceNameFeedBack.invalid} name={`resources[${index}].name`} type="text" component={Input}>
-                                            <Select options={optionsResource}></Select>
-                                          </Field> */}
-                                          <Field name={`resources[${index}].name`}>
-                                            {({ field, form }) => (
-                                              <Select
-                                                field={field}
-                                                form={form}
-                                                options={optionsResource}
-                                                value={optionsResource.filter((option) => option.value === resources[index].name)}
-                                                onChange={(option) => form.setFieldValue(field.name, option.value)}
-                                              />
-                                            )}
-                                          </Field>
-                                        </FormItem>
-                                        <FormItem label="" invalid={resourcePositionFeedBack.invalid} errorMessage={resourcePositionFeedBack.errorMessage}>
-                                          <Field invalid={resourcePositionFeedBack.invalid} name={`resources[${index}].position`}>
-                                            {({ field, form }) => (
-                                              <Radio.Group value={values.resourcePositionFeedBack} onChange={(val) => form.setFieldValue(field.name, val)}>
-                                                <Radio value="Planner">Planner</Radio>
-                                                <Radio value="Developer">Developer</Radio>
-                                                <Radio value="Quality Assurance">Quality Assurance</Radio>
-                                              </Radio.Group>
-                                            )}
-                                          </Field>
-                                        </FormItem>
-
-                                        <Button shape="circle" size="sm" icon={<HiMinus />} onClick={() => remove(index)} />
-                                      </div>
-                                    );
-                                  })
-                                : null}
-                              <div>
-                                <Button
-                                  type="button"
-                                  className="ltr:mr-2 rtl:ml-2"
-                                  onClick={() => {
-                                    push({ name: "", position: "" });
-                                  }}
-                                >
-                                  Add a Resource
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </FieldArray>
-                      </FormContainer>
-                    </Card>
-                  </div>
-                </div>
+                                        <div className="ml-3">
+                                          <Button shape="circle" size="sm" icon={<HiMinus />} onClick={() => remove(index)} />
+                                        </div>
+                                      </InputGroup>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            : null}
+                          <div>
+                            <Button
+                              type="button"
+                              className="ltr:mr-2 rtl:ml-2"
+                              onClick={() => {
+                                push({ task_name: "", task_status: "", task_start: "", task_end: "" });
+                              }}
+                            >
+                              Add a Task
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </FormContainer>
+                </Card>
+                {/* </div> */}
                 <FormItem>
                   <Button type="reset" className="ltr:mr-2 rtl:ml-2" onClick={resetForm}>
                     Reset

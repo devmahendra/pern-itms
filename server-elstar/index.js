@@ -9,17 +9,17 @@ app.use(express.json());
 
 app.post("/projects/create-project", async (req, res) => {
   try {
-    const { project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered } = req.body;
+    const { project_no, project_name, project_description, project_owner, project_status, project_start, project_end, project_prefered } = req.body;
     const tasks = req.body.tasks;
     const resources = req.body.resources;
 
     const results = await pool.query(
       `
-      INSERT INTO project (project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO project (project_no, project_name, project_description, project_owner, project_status, project_start, project_end, project_prefered)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING project_id
       `,
-      [project_no, project_name, project_description, project_owner, project_priority, project_status, project_start, project_end, project_prefered]
+      [project_no, project_name, project_description, project_owner, project_status, project_start, project_end, project_prefered]
     );
     const projectId = results.rows[0].project_id;
 
@@ -29,17 +29,17 @@ app.post("/projects/create-project", async (req, res) => {
         INSERT INTO task (project_id, task_name, task_status, task_start, task_end, task_prefered)
         VALUES ($1, $2, $3, $4, $5, $6)
         `,
-        [projectId, tasks[i].task_name, project_status, tasks[i].task_start, tasks[i].task_end, project_prefered]
+        [projectId, tasks[i].task_name, tasks[i].task_status, tasks[i].task_start, tasks[i].task_end, project_prefered]
       );
     }
 
     for (let i = 0; i < resources.length; i++) {
       await pool.query(
         `
-        INSERT INTO resource (project_id, name, position)
-        VALUES ($1, $2, $3)
+        INSERT INTO resource (project_id, name)
+        VALUES ($1, $2)
         `,
-        [projectId, resources[i].name, resources[i].position]
+        [projectId, resources[i].value]
       );
     }
 
@@ -145,7 +145,7 @@ app.post("/projects/calendar-tasks", async (req, res) => {
     console.log("end", end);
     const allProjectsTasks = await pool.query(
       `SELECT distinct t.task_id as task_id, t.project_id, t.task_name, t.task_status, t.task_status, t.task_start, t.task_end, t.task_prefered, 
-	  p.project_id, p.project_no, p.project_name, p.project_description, p.project_owner, p.project_priority, p.project_status, p.project_start, p.project_end
+	  p.project_id, p.project_no, p.project_name, p.project_description, p.project_owner, p.project_status, p.project_start, p.project_end
 	  FROM task t
 	  JOIN project p ON t.project_id = p.project_id
 	  JOIN (SELECT generate_series($1::date, $2::date, '1 day') as dt) as z on t.task_start <= z.dt::date AND t.task_end >= z.dt::date 
@@ -243,7 +243,7 @@ app.post("/projects/calendar-task/:id", async (req, res) => {
 app.get("/projectss", async (req, res) => {
   try {
     const allProjects = await pool.query(
-      "SELECT a.project_id, a.project_no, a.project_name, a.project_owner, a.project_priority, a.project_status, a.project_start, a.project_end, COUNT(b.task_id) as total_task, SUM(CASE WHEN b.task_status = 'Completed' THEN 1 ELSE 0 END) AS completed_task FROM project a JOIN task b ON a.project_id = b.project_id GROUP BY a.project_id"
+      "SELECT a.project_id, a.project_no, a.project_name, a.project_owner, a.project_status, a.project_start, a.project_end, COUNT(b.task_id) as total_task, SUM(CASE WHEN b.task_status = 'Completed' THEN 1 ELSE 0 END) AS completed_task FROM project a JOIN task b ON a.project_id = b.project_id GROUP BY a.project_id"
     );
     res.json(allProjects.rows);
   } catch (err) {
@@ -274,14 +274,14 @@ app.get("/resources/:id", async (req, res) => {
 
 app.get("/projects/summary-resources", async (req, res) => {
   try {
-    const summaryResources = await pool.query(`SELECT a.name, a.position,
+    const summaryResources = await pool.query(`SELECT a.name,
     COUNT(b.project_id) as total_project,
     SUM(CASE when b.project_status = 'New' THEN 1 ELSE 0 END) as new_project,
     SUM(CASE when b.project_status = 'Ongoing' THEN 1 ELSE 0 END) as ongoing_project,
     SUM(CASE when b.project_status = 'Expired' THEN 1 ELSE 0 END) as expired_project,
     SUM(CASE when b.project_status = 'Completed' THEN 1 ELSE 0 END) as completed_project
     from resource a JOIN project b ON a.project_id = b.project_id
-    GROUP BY a.name, a.position ORDER BY total_project DESC LIMIT 3`);
+    GROUP BY a.name ORDER BY total_project DESC LIMIT 3`);
     res.json(summaryResources.rows);
   } catch (err) {
     console.error(err.message);
