@@ -46,9 +46,6 @@ const CalendarTask = () => {
 
   return (
     <Card className="mb-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3>Tasks Calendar</h3>
-      </div>
       <div className={classNames("calendar")}>
         <FullCalendar
           events={data}

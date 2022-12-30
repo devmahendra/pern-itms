@@ -1,9 +1,9 @@
 const appConfig = {
-  apiPrefix: "http://localhost:5002",
+  apiPrefix: "/api",
   authenticatedEntryPath: "/home",
   unAuthenticatedEntryPath: "/sign-in",
   tourPath: "/",
-  enableMock: false,
+  enableMock: true,
 };
 
 export default appConfig;

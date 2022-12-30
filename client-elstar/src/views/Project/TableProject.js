@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress } from "components/ui";
+import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress, toast, Notification } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
 // import { useDispatch } from "react-redux";
 import { matchSorter } from "match-sorter";
@@ -9,6 +9,29 @@ import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
+
+const openNotification = (type) => {
+  toast.push(
+    <Notification title={type.charAt(0).toUpperCase() + type.slice(1)} type={type}>
+      Success Delete a Project!
+    </Notification>
+  );
+};
+
+const onDelete = async (id) => {
+  try {
+    const deleteData = await fetch(`http://localhost:5002/projects-delete/${id}`, {
+      method: "DELETE",
+    });
+    console.log(deleteData);
+    openNotification("success");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } catch (err) {
+    console.error(err.message);
+  }
+};
 
 function FilterInput({ preGlobalFilteredRows, globalFilter, setGlobalFilter }) {
   const count = preGlobalFilteredRows.length;
@@ -51,14 +74,8 @@ const pageSizeOption = [
 ];
 
 const ActionColumn = ({ row }) => {
-  // const dispatch = useDispatch();
   const { textTheme } = useThemeClass();
   const navigate = useNavigate();
-
-  // const onDelete = () => {
-  //   dispatch("/");
-  //   dispatch("/");
-  // };
 
   const onResources = useCallback(() => {
     navigate(`/project/resource-project/${row?.project_id}`);
@@ -86,7 +103,7 @@ const ActionColumn = ({ row }) => {
         </span>
       </Tooltip>
       <Tooltip title="Delete">
-        <span className="cursor-pointer p-2 hover:text-red-500">
+        <span className="cursor-pointer p-2 hover:text-red-500" onClick={() => onDelete(row?.project_id)}>
           <HiOutlineTrash />
         </span>
       </Tooltip>
@@ -98,7 +115,7 @@ const ReactTable = ({ columns }) => {
   const [data, setData] = useState([]);
   const getData = async () => {
     try {
-      const response = await fetch("http://localhost:5002/projectss");
+      const response = await fetch("http://localhost:5002/projects");
       const jsonData = await response.json();
       setData(jsonData);
     } catch (err) {

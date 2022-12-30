@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress } from "components/ui";
+import { Table, Input, Pagination, Select, Button, Tooltip, Card, Progress, toast, Notification } from "components/ui";
 import { useSortBy, useTable, useFilters, useGlobalFilter, useAsyncDebounce, usePagination } from "react-table";
-import { useDispatch } from "react-redux";
+
 import { matchSorter } from "match-sorter";
 import { HiOutlineSearch, HiDownload, HiPlusCircle, HiOutlinePencil, HiOutlineTrash, HiOutlineCalendar } from "react-icons/hi";
 import { Link, useParams, useNavigate } from "react-router-dom";
@@ -9,6 +9,29 @@ import useThemeClass from "utils/hooks/useThemeClass";
 import dayjs from "dayjs";
 
 const { Tr, Th, Td, THead, TBody, Sorter } = Table;
+
+const openNotification = (type) => {
+  toast.push(
+    <Notification title={type.charAt(0).toUpperCase() + type.slice(1)} type={type}>
+      Success Delete a Task!
+    </Notification>
+  );
+};
+
+const onDelete = async (ids) => {
+  try {
+    const deleteData = await fetch(`http://localhost:5002/tasks-delete/${ids}`, {
+      method: "DELETE",
+    });
+    console.log(deleteData);
+    openNotification("success");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } catch (err) {
+    console.error(err.message);
+  }
+};
 
 function getBusinessDatesCount(startDate, endDate) {
   let count = 0;
@@ -74,14 +97,8 @@ const pageSizeOption = [
 ];
 
 const ActionColumn = ({ row }) => {
-  const dispatch = useDispatch();
   const { textTheme } = useThemeClass();
   const navigate = useNavigate();
-
-  const onDelete = () => {
-    dispatch("/");
-    dispatch("/");
-  };
 
   const onView = useCallback(() => {
     navigate(`/project/task/${row?.task_id}`);
@@ -95,7 +112,7 @@ const ActionColumn = ({ row }) => {
         </span>
       </Tooltip>
       <Tooltip title="Delete">
-        <span className="cursor-pointer p-2 hover:text-red-500" onClick={onDelete}>
+        <span className="cursor-pointer p-2 hover:text-red-500" onClick={() => onDelete(row?.task_id)}>
           <HiOutlineTrash />
         </span>
       </Tooltip>
@@ -185,18 +202,18 @@ const TaskProjectTable = () => {
   let { id } = useParams();
   const [data, setData] = useState([]);
 
+  const getData = async () => {
+    try {
+      const response = await fetch(`http://localhost:5002/tasks/${id}`);
+      const jsonData = await response.json();
+      setData(jsonData);
+    } catch (err) {
+      console.error(err.message);
+    }
+  };
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const response = await fetch(`http://localhost:5002/tasks/${id}`);
-        const jsonData = await response.json();
-        setData(jsonData);
-      } catch (err) {
-        console.error(err.message);
-      }
-    };
     getData();
-  });
+  }, []);
 
   const totalData = data.length;
 

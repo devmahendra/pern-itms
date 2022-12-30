@@ -50,16 +50,6 @@ app.post("/projects/create-project", async (req, res) => {
   }
 });
 
-//get all projects
-app.get("/projects", async (req, res) => {
-  try {
-    const allProjects = await pool.query("SELECT * FROM project ");
-    res.json(allProjects.rows);
-  } catch (err) {
-    console.error(err.message);
-  }
-});
-
 //calendar projects events mapping
 app.post("/projects/calendar", async (req, res) => {
   try {
@@ -205,7 +195,7 @@ app.post("/projects/calendar-task/:id", async (req, res) => {
     console.log("end", end);
     const allProjectsTasks = await pool.query(
       `SELECT distinct t.task_id as task_id, t.project_id, t.task_name, t.task_status, t.task_status, t.task_start, t.task_end, t.task_prefered, 
-	  p.project_id, p.project_no, p.project_name, p.project_description, p.project_owner, p.project_priority, p.project_status, p.project_start, p.project_end
+	  p.project_id, p.project_no, p.project_name, p.project_description, p.project_owner, p.project_status, p.project_start, p.project_end
 	  FROM task t
 	  JOIN project p ON t.project_id = p.project_id
 	  JOIN (SELECT generate_series($1::date, $2::date, '1 day') as dt) as z on t.task_start <= z.dt::date AND t.task_end >= z.dt::date 
@@ -240,7 +230,7 @@ app.post("/projects/calendar-task/:id", async (req, res) => {
 });
 
 //get all projects
-app.get("/projectss", async (req, res) => {
+app.get("/projects", async (req, res) => {
   try {
     const allProjects = await pool.query(
       "SELECT a.project_id, a.project_no, a.project_name, a.project_owner, a.project_status, a.project_start, a.project_end, COUNT(b.task_id) as total_task, SUM(CASE WHEN b.task_status = 'Completed' THEN 1 ELSE 0 END) AS completed_task FROM project a JOIN task b ON a.project_id = b.project_id GROUP BY a.project_id"
@@ -267,6 +257,41 @@ app.get("/resources/:id", async (req, res) => {
     const { id } = req.params;
     const resource = await pool.query("SELECT * FROM resource WHERE project_id = $1", [id]);
     res.json(resource.rows);
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// delete a project detail
+app.delete("/projects-delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleteTask = await pool.query("DELETE FROM resource WHERE project_id = $1", [id]);
+    const deleteResource = await pool.query("DELETE FROM task WHERE project_id = $1", [id]);
+    const deleteProject = await pool.query("DELETE FROM project WHERE project_id = $1", [id]);
+    res.json("Project has Deleted!");
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// delete a project resource detail
+app.delete("/resources-delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleteResource = await pool.query("DELETE FROM resource WHERE resource_id = $1", [id]);
+    res.json("Resource has Deleted!");
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+// delete a project task detail
+app.delete("/tasks-delete/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleteTask = await pool.query("DELETE FROM task WHERE task_id = $1", [id]);
+    res.json("Task has Deleted!");
   } catch (err) {
     console.error(err.message);
   }
